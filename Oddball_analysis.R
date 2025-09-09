@@ -9,6 +9,25 @@ setwd("~/Documents/2nd_Degree/My_Research/data/Pilot_Data_Analysis/oddball_data_
 
 # --- Load all CSV files (one per participant) ---
 file_list <- list.files(pattern = "_oddball_data.csv$")
+
+for (file in file_list) {
+  # Load participant data
+  df <- read_csv(file)
+  
+  # Keep only phase 2 (active)
+  df_active <- df %>% filter(phase == "part2")
+  
+  # Count rare sounds per image
+  rare_counts <- df_active %>%
+    group_by(background_image) %>%
+    summarise(n_rare = sum(sound_type == "rare", na.rm = TRUE),
+              .groups = "drop")
+  
+  # Save per participant
+  participant_id <- unique(df$participant)
+  write_csv(rare_counts, paste0("rare_count_", participant_id, ".csv"))
+}
+
 oddball <- file_list |>
   lapply(read.csv) |>
   bind_rows()
@@ -44,7 +63,7 @@ summary_active <- oddball_active |>
     n_correct_rejections = sum(correct_rejection, na.rm = TRUE), #total correct rejections
     hit_rate = ifelse((n_hits + n_misses) > 0, n_hits / (n_hits + n_misses), NA_real_), #acc for rare (rare_acc)
     fa_rate = ifelse((n_false_alarms + n_correct_rejections) >0, n_false_alarms / (n_false_alarms + n_correct_rejections), NA_real_),
-    total_accuracy = ifelse(n_trials >0, (n_hits + n_correct_rejections) / n_trials, NA_real_),
+    total_accuracy = ifelse(n_trials > 0, (n_hits + n_correct_rejections) / n_trials, NA_real_),
     mean_rt_hits = mean(rt_from_sound[correct_hit], na.rm = TRUE),
     sd_rt_hits = sd(rt_from_sound[correct_hit], na.rm = TRUE)
   )
@@ -53,3 +72,14 @@ summary_active <- oddball_active |>
 summary_active <- as.data.frame(summary_active)
 
 print(summary_active)
+
+#### Preparing data for merge and further analysis ----
+# Count rare sounds per image
+rare_counts <- oddball_active |>
+  group_by(background_image) |>
+  summarise(
+    n_rare = sum(sound_type == "rare", na.rm = TRUE)
+  )
+
+write.csv(rare_counts, "rare_counts_per_image.csv", row.names = FALSE)
+

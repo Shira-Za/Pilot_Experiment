@@ -57,6 +57,8 @@ print(t_accuracy)
 print(t_rt)
 
 #### Preparing for merge ----
+rare_counts <- read.csv("rare_counts_per_image.csv")
+
 library(tidyr)
 
 recognition_long <- recognition |>
@@ -68,3 +70,21 @@ recognition_long <- recognition |>
   mutate(
     correct_response = ifelse(correct == TRUE & correct_answer == image, 1, 0)
   )
+
+recognition_long <- recognition_long |>
+  left_join(rare_counts, by = c("image" = "background_image"))
+
+# Accuracy vs rare counts
+cor_accuracy <- cor.test(
+  recognition_long$n_rare,
+  recognition_long$correct_response,
+  method = "spearman"
+)
+
+# RT vs rare counts (only correct trials)
+cor_rt <- cor.test(
+  recognition_long$n_rare[recognition_long$correct_response == 1],
+  recognition_long$reaction_time[recognition_long$correct_response == 1],
+  method = "spearman"
+)
+
