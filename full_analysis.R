@@ -84,6 +84,29 @@ summary_wide <- summary_recog %>%
     mean_rt_active = mean_rt_recognition2
   )
 
+library(ggplot2)
+library(patchwork)
+
+# Accuracy per participant & phase
+p1 = ggplot(summary_recog, aes(x = phase, y = accuracy, fill = phase)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~participant) +
+  labs(title = "Recognition Accuracy by Phase",
+       x = "Phase",
+       y = "Mean Accuracy") +
+  theme_minimal()
+
+# Mean RT per participant & phase
+p2 = ggplot(summary_recog, aes(x = phase, y = mean_rt, fill = phase)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  facet_wrap(~participant) +
+  labs(title = "Recognition Reaction Time by Phase",
+       x = "Phase",
+       y = "Mean RT (ms)") +
+  theme_minimal()
+
+print(p1+p2)
+
 # Paired t-tests
 if(nrow(summary_wide) > 1){
   t_accuracy <- t.test(summary_wide$accuracy_active,
